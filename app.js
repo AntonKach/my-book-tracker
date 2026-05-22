@@ -461,18 +461,16 @@ Return the result as a strict, single JSON object in the exact format shown belo
     if (dbScriptUrl && dbScriptUrl.trim() !== '' && dbScriptUrl.startsWith('https://script.google.com')) {
       console.log('[Database Sync] Sending book to Google Script:', bookData.title);
       try {
-        const response = await fetch(dbScriptUrl, {
+        await fetch(dbScriptUrl, {
           method: 'POST',
+          mode: 'no-cors',
           headers: {
             "Content-Type": "text/plain;charset=utf-8"
           },
           body: JSON.stringify(bookData)
         });
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        console.log('[Database Sync] Successfully synced book:', bookData.title);
+        console.log('[Database Sync] Successfully synced book (opaque response):', bookData.title);
       } catch (error) {
         console.error('[Database Sync] Failed to sync book:', bookData.title, error);
       }
