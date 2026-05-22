@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>My Book Tracker - PWA</title>
+  
+  <!-- PWA & Mobile Optimization Meta Tags -->
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BookTracker">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  
+  <!-- Premium Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Modern Material Icons -->
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+  
+  <!-- Application Styles -->
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Background Glowing Blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- Fullscreen Glassmorphic Loader -->
+  <div id="loading-overlay" class="loading-overlay hidden" aria-hidden="true" role="dialog" aria-labelledby="loader-title">
+    <div class="loader-content">
+      <div class="scanner-container">
+        <div class="scanner-laser"></div>
+        <div class="scanner-book-icon">
+          <span class="material-icons-round">auto_stories</span>
+        </div>
+      </div>
+      <h2 id="loader-title">Ανάλυση Εξωφύλλου...</h2>
+      <p id="loader-subtitle">Το Gemini AI επεξεργάζεται την εικόνα</p>
+      <div class="loader-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-container">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="header-logo">
+        <div class="logo-icon-bg">
+          <span class="material-icons-round">auto_stories</span>
+        </div>
+        <div class="logo-text">
+          <h1>My Book Tracker</h1>
+          <span class="pwa-badge">PWA</span>
+        </div>
+      </div>
+      
+      <div class="header-actions">
+        <button id="toggle-key-btn" class="icon-btn" aria-label="Ρυθμίσεις Gemini Key" title="Ρυθμίσεις Gemini Key">
+          <span class="material-icons-round">vpn_key</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Gemini Key Config Banner (Collapsible) -->
+    <section id="key-config-section" class="key-config-section glass-panel hidden" aria-label="Gemini API Key Configuration">
+      <div class="key-config-header">
+        <span class="material-icons-round text-accent">key</span>
+        <h3>Gemini API Key</h3>
+      </div>
+      <p class="key-description">
+        Εισάγετε το δικό σας <strong>Gemini API Key</strong> για να ενεργοποιήσετε την αυτόματη αναγνώριση βιβλίων. Το κλειδί αποθηκεύεται με ασφάλεια αποκλειστικά στη συσκευή σας (`localStorage`).
+      </p>
+      <div class="key-input-wrapper">
+        <div class="input-icon-field">
+          <span class="material-icons-round field-icon">lock</span>
+          <input type="password" id="gemini-key-input" placeholder="AIzaSy..." autocomplete="off">
+          <button id="toggle-visible-key-btn" class="input-action-btn" aria-label="Εμφάνιση κλειδιού">
+            <span class="material-icons-round">visibility</span>
+          </button>
+        </div>
+        <button id="save-key-btn" class="btn btn-primary">Αποθήκευση</button>
+      </div>
+      <p id="key-status-msg" class="status-message"></p>
+    </section>
+
+    <!-- Stats Dashboard Dashboard -->
+    <section class="dashboard-stats" aria-label="Στατιστικά Βιβλιοθήκης">
+      <div class="stat-card glass-panel animate-fade-in">
+        <div class="stat-icon-wrapper purple">
+          <span class="material-icons-round">library_books</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stats-total">0</span>
+          <span class="stat-label">Συνολικά Βιβλία</span>
+        </div>
+      </div>
+
+      <div class="stat-card glass-panel animate-fade-in delay-1">
+        <div class="stat-icon-wrapper green">
+          <span class="material-icons-round">task_alt</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stats-read">0</span>
+          <span class="stat-label">Διαβασμένα</span>
+        </div>
+      </div>
+
+      <div class="stat-card glass-panel animate-fade-in delay-2">
+        <div class="stat-icon-wrapper orange">
+          <span class="material-icons-round">category</span>
+        </div>
+        <div class="stat-info">
+          <span class="stat-value" id="stats-categories">0</span>
+          <span class="stat-label">Κατηγορίες</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Scanner Action Panel -->
+    <section class="scanner-action-section glass-panel" aria-label="Σάρωση Νέου Βιβλίου">
+      <div class="scanner-hero">
+        <div class="scanner-hero-art">
+          <span class="material-icons-round hero-glow-icon">photo_camera</span>
+        </div>
+        <div class="scanner-hero-text">
+          <h2>Προσθήκη με Φωτογραφία</h2>
+          <p>Βγάλε μια φωτογραφία το εξώφυλλο του βιβλίου και άφησε το Gemini AI να κάνει τα υπόλοιπα!</p>
+        </div>
+      </div>
+
+      <div class="scan-button-wrapper">
+        <label for="camera-input" class="btn btn-scan animate-pulse" role="button" tabindex="0">
+          <span class="material-icons-round">photo_camera</span>
+          <span>Σάρωση Εξωφύλλου</span>
+        </label>
+        <!-- The capture="environment" forces the rear camera on mobile phones -->
+        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+      </div>
+    </section>
+
+    <!-- Search & Filters -->
+    <section class="library-controls glass-panel" aria-label="Αναζήτηση και Φίλτρα">
+      <div class="search-box">
+        <span class="material-icons-round">search</span>
+        <input type="text" id="search-input" placeholder="Αναζήτηση με τίτλο, συγγραφέα ή κατηγορία...">
+      </div>
+      <div class="filter-tabs">
+        <button class="filter-tab active" data-filter="all">Όλα</button>
+        <button class="filter-tab" data-filter="reading">Προς Ανάγνωση</button>
+        <button class="filter-tab" data-filter="read">Διαβασμένα</button>
+      </div>
+    </section>
+
+    <!-- Shelf Grid / List -->
+    <main class="books-shelf-section">
+      <div class="shelf-header">
+        <h2>Η Βιβλιοθήκη μου</h2>
+        <span class="shelf-subtitle" id="shelf-count-text">0 βιβλία</span>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state glass-panel">
+        <div class="empty-icon-wrapper">
+          <span class="material-icons-round">import_contacts</span>
+        </div>
+        <h3>Η βιβλιοθήκη σας είναι άδεια</h3>
+        <p>Χρησιμοποιήστε το κουμπί «Σάρωση Εξωφύλλου» παραπάνω για να φωτογραφίσετε ένα βιβλίο και να το προσθέσετε αυτόματα στη συλλογή σας.</p>
+      </div>
+
+      <!-- Grid of Book Cards -->
+      <div id="books-grid" class="books-grid">
+        <!-- Rendered dynamically via JavaScript -->
+      </div>
+    </main>
+
+    <footer class="app-footer">
+      <p>&copy; 2026 My Book Tracker. Κατασκευάστηκε με Gemini 1.5 Flash AI.</p>
+    </footer>
+
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
