@@ -165,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
       };
 
-      saveBook(newBook);
+      await saveBook(newBook);
 
       // Clear input
       cameraInput.value = '';
@@ -451,7 +451,7 @@ Return the result as a strict, single JSON object in the exact format shown belo
     localStorage.setItem('my_book_tracker_books', JSON.stringify(books));
   }
 
-  function saveBook(bookData) {
+  async function saveBook(bookData) {
     // 1. Save to local storage books array
     books.unshift(bookData);
     saveBooksToStorage();
@@ -460,19 +460,22 @@ Return the result as a strict, single JSON object in the exact format shown belo
     // 2. Background Sync with Google Apps Script if URL exists
     if (dbScriptUrl) {
       console.log('[Database Sync] Sending book to Google Script:', bookData.title);
-      fetch(dbScriptUrl, {
-        method: 'POST',
-        body: JSON.stringify(bookData)
-      })
-      .then(response => {
+      try {
+        const response = await fetch(dbScriptUrl, {
+          method: 'POST',
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(bookData)
+        });
+
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         console.log('[Database Sync] Successfully synced book:', bookData.title);
-      })
-      .catch(error => {
+      } catch (error) {
         console.error('[Database Sync] Failed to sync book:', bookData.title, error);
-      });
+      }
     }
   }
 
