@@ -220,7 +220,7 @@ Return the result as a strict, single JSON object in the exact format shown belo
   "summary": "exactly 2 sentences in Greek about the book's core premise"
 }`;
 
-    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     
     const requestBody = {
       contents: [
