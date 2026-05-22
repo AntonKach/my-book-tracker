@@ -69,25 +69,51 @@
       </div>
     </header>
 
-    <!-- Gemini Key Config Banner (Collapsible) -->
-    <section id="key-config-section" class="key-config-section glass-panel hidden" aria-label="Gemini API Key Configuration">
+    <!-- Gemini Key & Database Config Banner (Collapsible) -->
+    <section id="key-config-section" class="key-config-section glass-panel hidden" aria-label="Gemini API Key & Database Configuration">
       <div class="key-config-header">
-        <span class="material-icons-round text-accent">key</span>
-        <h3>Gemini API Key</h3>
+        <span class="material-icons-round text-accent">settings</span>
+        <h3>Ρυθμίσεις Σύνδεσης & Βάσης</h3>
       </div>
-      <p class="key-description">
-        Εισάγετε το δικό σας <strong>Gemini API Key</strong> για να ενεργοποιήσετε την αυτόματη αναγνώριση βιβλίων. Το κλειδί αποθηκεύεται με ασφάλεια αποκλειστικά στη συσκευή σας (`localStorage`).
-      </p>
-      <div class="key-input-wrapper">
-        <div class="input-icon-field">
-          <span class="material-icons-round field-icon">lock</span>
-          <input type="password" id="gemini-key-input" placeholder="AIzaSy..." autocomplete="off">
-          <button id="toggle-visible-key-btn" class="input-action-btn" aria-label="Εμφάνιση κλειδιού">
-            <span class="material-icons-round">visibility</span>
-          </button>
+      
+      <!-- Gemini API Key Input Row -->
+      <div class="config-row">
+        <label for="gemini-key-input" class="config-label" style="display: block; font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">Gemini API Key</label>
+        <p class="key-description" style="margin-bottom: 8px;">
+          Εισάγετε το δικό σας <strong>Gemini API Key</strong> για να ενεργοποιήσετε την αυτόματη αναγνώριση βιβλίων.
+        </p>
+        <div class="key-input-wrapper">
+          <div class="input-icon-field" style="width: 100%;">
+            <span class="material-icons-round field-icon">lock</span>
+            <input type="password" id="gemini-key-input" placeholder="AIzaSy..." autocomplete="off">
+            <button id="toggle-visible-key-btn" class="input-action-btn" aria-label="Εμφάνιση κλειδιού">
+              <span class="material-icons-round">visibility</span>
+            </button>
+          </div>
         </div>
-        <button id="save-key-btn" class="btn btn-primary">Αποθήκευση</button>
       </div>
+
+      <!-- Google Script URL Input Row -->
+      <div class="config-row" style="margin-top: 16px;">
+        <label for="db-script-url-input" class="config-label" style="display: block; font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">Google Script URL (Optional Database)</label>
+        <p class="key-description" style="margin-bottom: 8px;">
+          Εισάγετε το URL του <strong>Google Apps Script Web App</strong> για τον συγχρονισμό των βιβλίων σας σε εξωτερική βάση.
+        </p>
+        <div class="key-input-wrapper">
+          <div class="input-icon-field" style="width: 100%;">
+            <span class="material-icons-round field-icon">cloud_queue</span>
+            <input type="password" id="db-script-url-input" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+            <button id="toggle-visible-db-url-btn" class="input-action-btn" aria-label="Εμφάνιση URL">
+              <span class="material-icons-round">visibility</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-actions-row" style="display: flex; justify-content: flex-end; margin-top: 16px;">
+        <button id="save-key-btn" class="btn btn-primary">Αποθήκευση Ρυθμίσεων</button>
+      </div>
+      
       <p id="key-status-msg" class="status-message"></p>
     </section>
 

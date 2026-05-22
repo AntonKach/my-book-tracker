@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- State Variables ---
   let books = JSON.parse(localStorage.getItem('my_book_tracker_books')) || [];
   let apiKey = localStorage.getItem('my_book_tracker_gemini_key') || '';
+  let dbScriptUrl = localStorage.getItem('my_book_tracker_db_url') || '';
   let activeFilter = 'all';
   let searchQuery = '';
 
@@ -14,6 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleKeyBtn = document.getElementById('toggle-key-btn');
   const geminiKeyInput = document.getElementById('gemini-key-input');
   const toggleVisibleKeyBtn = document.getElementById('toggle-visible-key-btn');
+  const dbScriptUrlInput = document.getElementById('db-script-url-input');
+  const toggleVisibleDbUrlBtn = document.getElementById('toggle-visible-db-url-btn');
   const saveKeyBtn = document.getElementById('save-key-btn');
   const keyStatusMsg = document.getElementById('key-status-msg');
 
@@ -46,10 +49,16 @@ document.addEventListener('DOMContentLoaded', () => {
   initApp();
 
   function initApp() {
-    // Populate API Key in field if exists
+    // Populate fields if they exist in localStorage
     if (apiKey) {
       geminiKeyInput.value = apiKey;
-      showStatusMessage(keyStatusMsg, 'Το κλειδί API έχει αποθηκευτεί τοπικά!', 'success');
+    }
+    if (dbScriptUrl) {
+      dbScriptUrlInput.value = dbScriptUrl;
+    }
+
+    if (apiKey) {
+      showStatusMessage(keyStatusMsg, 'Οι ρυθμίσεις έχουν αποθηκευτεί τοπικά!', 'success');
     } else {
       // Prompt user visually by sliding down the config panel
       keyConfigSection.classList.remove('hidden');
@@ -73,15 +82,28 @@ document.addEventListener('DOMContentLoaded', () => {
       toggleVisibleKeyBtn.querySelector('span').textContent = type === 'password' ? 'visibility' : 'visibility_off';
     });
 
+    toggleVisibleDbUrlBtn.addEventListener('click', () => {
+      const type = dbScriptUrlInput.type === 'password' ? 'text' : 'password';
+      dbScriptUrlInput.type = type;
+      toggleVisibleDbUrlBtn.querySelector('span').textContent = type === 'password' ? 'visibility' : 'visibility_off';
+    });
+
     saveKeyBtn.addEventListener('click', () => {
       const keyVal = geminiKeyInput.value.trim();
+      const urlVal = dbScriptUrlInput.value.trim();
+      
       if (!keyVal) {
-        showStatusMessage(keyStatusMsg, 'Το κλειδί δεν μπορεί να είναι κενό!', 'error');
+        showStatusMessage(keyStatusMsg, 'Το κλειδί Gemini δεν μπορεί να είναι κενό!', 'error');
         return;
       }
+      
       apiKey = keyVal;
+      dbScriptUrl = urlVal;
+      
       localStorage.setItem('my_book_tracker_gemini_key', apiKey);
-      showStatusMessage(keyStatusMsg, 'Το κλειδί αποθηκεύτηκε επιτυχώς!', 'success');
+      localStorage.setItem('my_book_tracker_db_url', dbScriptUrl);
+      
+      showStatusMessage(keyStatusMsg, 'Οι ρυθμίσεις αποθηκεύτηκαν επιτυχώς!', 'success');
       setTimeout(() => {
         keyConfigSection.classList.add('hidden');
       }, 1500);
@@ -143,9 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
         addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
       };
 
-      books.unshift(newBook);
-      saveBooksToStorage();
-      renderLibrary();
+      saveBook(newBook);
 
       // Clear input
       cameraInput.value = '';
@@ -429,6 +449,31 @@ Return the result as a strict, single JSON object in the exact format shown belo
 
   function saveBooksToStorage() {
     localStorage.setItem('my_book_tracker_books', JSON.stringify(books));
+  }
+
+  function saveBook(bookData) {
+    // 1. Save to local storage books array
+    books.unshift(bookData);
+    saveBooksToStorage();
+    renderLibrary();
+
+    // 2. Background Sync with Google Apps Script if URL exists
+    if (dbScriptUrl) {
+      console.log('[Database Sync] Sending book to Google Script:', bookData.title);
+      fetch(dbScriptUrl, {
+        method: 'POST',
+        body: JSON.stringify(bookData)
+      })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        console.log('[Database Sync] Successfully synced book:', bookData.title);
+      })
+      .catch(error => {
+        console.error('[Database Sync] Failed to sync book:', bookData.title, error);
+      });
+    }
   }
 
   // --- Stats Dashboard Computations ---
