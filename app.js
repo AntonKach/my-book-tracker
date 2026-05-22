@@ -457,8 +457,8 @@ Return the result as a strict, single JSON object in the exact format shown belo
     saveBooksToStorage();
     renderLibrary();
 
-    // 2. Background Sync with Google Apps Script if URL exists
-    if (dbScriptUrl) {
+    // 2. Background Sync with Google Apps Script if URL is valid
+    if (dbScriptUrl && dbScriptUrl.trim() !== '' && dbScriptUrl.startsWith('https://script.google.com')) {
       console.log('[Database Sync] Sending book to Google Script:', bookData.title);
       try {
         const response = await fetch(dbScriptUrl, {
