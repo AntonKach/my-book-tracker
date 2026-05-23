@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let dbScriptUrl = localStorage.getItem('my_book_tracker_db_url') || '';
   let activeFilter = 'all';
   let searchQuery = '';
+  let html5QrcodeScanner = null;
 
   // --- DOM Elements ---
   const keyConfigSection = document.getElementById('key-config-section');
@@ -19,6 +20,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const toggleVisibleDbUrlBtn = document.getElementById('toggle-visible-db-url-btn');
   const saveKeyBtn = document.getElementById('save-key-btn');
   const keyStatusMsg = document.getElementById('key-status-msg');
+  
+  const btnScanBarcode = document.getElementById('btn-scan-barcode');
+  const readerWrapper = document.getElementById('reader-wrapper');
+  const btnStopBarcode = document.getElementById('btn-stop-barcode');
 
   const cameraInput = document.getElementById('camera-input');
   const loadingOverlay = document.getElementById('loading-overlay');
@@ -112,6 +117,23 @@ document.addEventListener('DOMContentLoaded', () => {
     // Camera Scan Triggering
     cameraInput.addEventListener('change', handleCameraCapture);
 
+    // Barcode Scanning Buttons
+    btnScanBarcode.addEventListener('click', () => {
+      // Guard: Check API Key is set
+      if (!apiKey) {
+        alert('Παρακαλώ καταχωρήστε ένα έγκυρο Gemini API Key για να συνεχίσετε στη σάρωση Barcode.');
+        keyConfigSection.classList.remove('hidden');
+        keyConfigSection.scrollIntoView({ behavior: 'smooth' });
+        return;
+      }
+      
+      // Show reader and start barcode scanning
+      readerWrapper.classList.remove('hidden');
+      startBarcodeScanner();
+    });
+
+    btnStopBarcode.addEventListener('click', stopBarcodeScanner);
+
     // Search and Filtering
     searchInput.addEventListener('input', (e) => {
       searchQuery = e.target.value.toLowerCase().trim();
@@ -175,6 +197,99 @@ document.addEventListener('DOMContentLoaded', () => {
       hideLoader();
       alert('Παρουσιάστηκε σφάλμα κατά την επεξεργασία: ' + error.message);
       cameraInput.value = '';
+    }
+  }
+
+  // --- Barcode Scanner Logic ---
+  function startBarcodeScanner() {
+    // If an instance is already running, clean it up first
+    if (html5QrcodeScanner) {
+      stopBarcodeScanner();
+    }
+
+    html5QrcodeScanner = new Html5QrcodeScanner(
+      "reader",
+      { 
+        fps: 15, 
+        qrbox: (width, height) => {
+          // Responsive box suited for 1D ISBN barcodes (wide and relatively thin)
+          const boxWidth = Math.min(width * 0.85, 320);
+          const boxHeight = Math.min(height * 0.35, 120);
+          return { width: boxWidth, height: boxHeight };
+        },
+        aspectRatio: 1.0
+      },
+      /* verbose= */ false
+    );
+    
+    html5QrcodeScanner.render(onScanSuccess, onScanError);
+  }
+
+  function stopBarcodeScanner() {
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.clear().catch(err => console.error('Failed to clear scanner:', err));
+      html5QrcodeScanner = null;
+    }
+    readerWrapper.classList.add('hidden');
+  }
+
+  function onScanError(errorMessage) {
+    // Suppress scan spam errors in the console
+  }
+
+  async function onScanSuccess(decodedText, decodedResult) {
+    console.log(`Barcode scanned: ${decodedText}`);
+    
+    // Stop the scanner immediately
+    stopBarcodeScanner();
+
+    // Show loading indicator
+    showLoader('Αναζήτηση ISBN...', `Αναζήτηση στοιχείων για το barcode: ${decodedText}`);
+
+    try {
+      // 1. Fetch from Google Books API
+      const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${decodedText.trim()}`;
+      const response = await fetch(googleBooksUrl);
+      if (!response.ok) {
+        throw new Error(`Σφάλμα Google Books API: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      if (!data.items || data.items.length === 0) {
+        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη βάση της Google Books API.`);
+      }
+
+      const volumeInfo = data.items[0].volumeInfo;
+      const title = volumeInfo.title || 'Άγνωστος Τίτλος';
+      const authors = volumeInfo.authors ? volumeInfo.authors.join(', ') : 'Άγνωστος Συγγραφέας';
+      
+      let coverUrl = volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail || '';
+      if (coverUrl && coverUrl.startsWith('http://')) {
+        coverUrl = coverUrl.replace('http://', 'https://');
+      }
+
+      // 2. Call Gemini API to get Greek summary and category
+      showLoader('Ανάλυση AI...', 'Το Gemini AI δημιουργεί τη σύνοψη στα Ελληνικά');
+      const geminiData = await fetchBookDetailsFromGeminiText(title, authors);
+
+      // 3. Construct new book object
+      const newBook = {
+        id: 'book_' + Date.now(),
+        title: geminiData.title || title,
+        author: geminiData.author || authors,
+        category: geminiData.category || 'Γενικό',
+        summary: geminiData.summary || 'Δεν βρέθηκε σύνοψη.',
+        coverThumbnail: coverUrl, // Using Google Books cover URL
+        isRead: false,
+        addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
+      };
+
+      await saveBook(newBook);
+      hideLoader();
+    } catch (err) {
+      console.error('Barcode processing failed:', err);
+      hideLoader();
+      alert('Σφάλμα κατά την επεξεργασία του Barcode: ' + err.message);
     }
   }
 
@@ -301,6 +416,57 @@ Return the result as a strict, single JSON object in the exact format shown belo
     } catch (err) {
       console.error('REST Call failed:', err);
       throw err;
+    }
+  }
+
+  async function fetchBookDetailsFromGeminiText(title, author) {
+    const prompt = `I am logging a book titled '${title}' by '${author}'. Give me a 2-sentence summary in Greek and its genre/category. Return strictly a JSON object with keys: title, author, category, summary. Do not use markdown backticks.`;
+
+    const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    
+    const requestBody = {
+      contents: [
+        {
+          parts: [
+            { text: prompt }
+          ]
+        }
+      ],
+      generationConfig: {
+        responseMimeType: "application/json"
+      }
+    };
+
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      const statusMsg = errorData.error?.message || `HTTP error! Status: ${response.status}`;
+      throw new Error(`Σφάλμα Gemini API: ${statusMsg}`);
+    }
+
+    const responseData = await response.json();
+    const candidates = responseData.candidates;
+    if (!candidates || candidates.length === 0) {
+      throw new Error('Δεν επιστράφηκε αποτέλεσμα από το μοντέλο Gemini AI.');
+    }
+    
+    let rawText = candidates[0].content.parts[0].text.trim();
+    if (rawText.startsWith('```')) {
+      rawText = rawText.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+    }
+
+    try {
+      return JSON.parse(rawText);
+    } catch (jsonErr) {
+      console.warn('JSON parsing failed. Attempting fallback parse of text:', rawText);
+      return fallbackRegexParse(rawText);
     }
   }
 

@@ -21,6 +21,9 @@
   <!-- Modern Material Icons -->
   <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
   
+  <!-- HTML5 QR Code & Barcode Scanner Library -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+
   <!-- Application Styles -->
   <link rel="stylesheet" href="index.css">
 </head>
@@ -162,13 +165,23 @@
         </div>
       </div>
 
-      <div class="scan-button-wrapper">
+      <div class="scan-button-wrapper" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
         <label for="camera-input" class="btn btn-scan animate-pulse" role="button" tabindex="0">
           <span class="material-icons-round">photo_camera</span>
           <span>Σάρωση Εξωφύλλου</span>
         </label>
-        <!-- The capture="environment" forces the rear camera on mobile phones -->
         <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+
+        <button id="btn-scan-barcode" class="btn btn-scan animate-pulse" style="background: linear-gradient(135deg, var(--accent-light), var(--accent-color)); border: none; cursor: pointer; color: white;">
+          <span class="material-icons-round">qr_code_scanner</span>
+          <span>Σάρωση Barcode (ISBN)</span>
+        </button>
+      </div>
+
+      <!-- Live Barcode Camera Feed Container -->
+      <div id="reader-wrapper" class="hidden" style="width: 100%; max-width: 500px; margin: 20px auto 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 10, 25, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); padding: 16px;">
+        <div id="reader" style="width: 100%;"></div>
+        <button id="btn-stop-barcode" class="btn btn-primary" style="margin: 16px auto 0 auto; display: block; width: fit-content; border: none; cursor: pointer;">Ακύρωση Σάρωσης</button>
       </div>
     </section>
 
