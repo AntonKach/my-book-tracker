@@ -284,5 +284,5 @@ export async function resolveISBN(decodedText) {
     throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη Google Books, την IsbnSearch ή την Open Library.\nΣφάλματα: ${errorLog.join(', ')}`);
   }
 
-  return { title, authors, coverUrl };
+  return { title, authors, coverUrl, isbn: decodedText.trim() };
 }

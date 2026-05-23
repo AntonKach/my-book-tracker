@@ -180,6 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
         category: bookMetadata.category || 'Γενικό',
         summary: bookMetadata.summary || 'Δεν βρέθηκε σύνοψη για αυτό το βιβλίο.',
         coverThumbnail: compressedImageBase64,
+        isbn: '',
         isRead: false,
         addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
       };
@@ -205,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     try {
       // 1. Resolve ISBN via 3-step fallback chain
-      const { title, authors, coverUrl } = await resolveISBN(decodedText);
+      const { title, authors, coverUrl, isbn } = await resolveISBN(decodedText);
 
       // 2. Call Gemini API to get Greek summary and category
       showLoader('Ανάλυση AI...', 'Το Gemini AI δημιουργεί τη σύνοψη στα Ελληνικά');
@@ -219,6 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
         category: geminiData.category || 'Γενικό',
         summary: geminiData.summary || 'Δεν βρέθηκε σύνοψη.',
         coverThumbnail: coverUrl,
+        isbn: isbn || decodedText.trim(),
         isRead: false,
         addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
       };
