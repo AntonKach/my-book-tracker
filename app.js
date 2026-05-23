@@ -258,25 +258,25 @@ document.addEventListener('DOMContentLoaded', () => {
     showLoader('Αναζήτηση ISBN...', `Αναζήτηση στοιχείων για το barcode: ${decodedText}`);
 
     try {
-      // 1. Fetch from Google Books API
-      const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${decodedText.trim()}`;
-      const response = await fetch(googleBooksUrl);
+      // 1. Fetch from Open Library API
+      const openLibraryUrl = `https://openlibrary.org/search.json?q=${decodedText.trim()}`;
+      const response = await fetch(openLibraryUrl);
       if (!response.ok) {
-        throw new Error(`Σφάλμα Google Books API: ${response.status}`);
+        throw new Error(`Σφάλμα Open Library API: ${response.status}`);
       }
       
       const data = await response.json();
-      if (!data.items || data.items.length === 0) {
-        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη βάση της Google Books API.`);
+      if (!data.docs || data.docs.length === 0) {
+        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη βάση της Open Library.`);
       }
 
-      const volumeInfo = data.items[0].volumeInfo;
-      const title = volumeInfo.title || 'Άγνωστος Τίτλος';
-      const authors = volumeInfo.authors ? volumeInfo.authors.join(', ') : 'Άγνωστος Συγγραφέας';
+      const doc = data.docs[0];
+      const title = doc.title || 'Άγνωστος Τίτλος';
+      const authors = doc.author_name ? doc.author_name.join(', ') : 'Άγνωστος Συγγραφέας';
       
-      let coverUrl = volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail || '';
-      if (coverUrl && coverUrl.startsWith('http://')) {
-        coverUrl = coverUrl.replace('http://', 'https://');
+      let coverUrl = '';
+      if (doc.cover_i) {
+        coverUrl = `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
       }
 
       // 2. Call Gemini API to get Greek summary and category
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
         author: geminiData.author || authors,
         category: geminiData.category || 'Γενικό',
         summary: geminiData.summary || 'Δεν βρέθηκε σύνοψη.',
-        coverThumbnail: coverUrl, // Using Google Books cover URL
+        coverThumbnail: coverUrl, // Using Open Library Cover URL
         isRead: false,
         addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
       };
