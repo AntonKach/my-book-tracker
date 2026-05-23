@@ -55,8 +55,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // --- Initialize App State ---
   initApp();
 
+  /**
+   * Initializes the application state upon startup.
+   * Automatically pre-fills deployment keys from localStorage (via js/storage.js)
+   * and configures the active state so the user can scan/sync immediately.
+   */
   function initApp() {
-    // Populate fields if they exist
+    // 1. Immediately fetch saved credentials from the storage module
+    const savedCredentials = loadCredentials();
+    apiKey = savedCredentials.apiKey || '';
+    dbScriptUrl = savedCredentials.dbScriptUrl || '';
+
+    // 2. UI Auto-Fill: If saved credentials exist, pre-fill their input values
     if (apiKey) {
       geminiKeyInput.value = apiKey;
     }
@@ -64,17 +74,22 @@ document.addEventListener('DOMContentLoaded', () => {
       dbScriptUrlInput.value = dbScriptUrl;
     }
 
+    // 3. Active State: Configure UI messaging and state immediately upon boot
     if (apiKey) {
       showStatusMessage(keyStatusMsg, 'Οι ρυθμίσεις έχουν αποθηκευτεί τοπικά!', 'success');
     } else {
+      // If keys are missing, reveal the configuration section to guide the user
       keyConfigSection.classList.remove('hidden');
       showStatusMessage(keyStatusMsg, 'Παρακαλώ εισάγετε ένα Gemini API Key.', 'error');
     }
 
+    // Render the library shelf
     renderLibrary();
+    
+    // Set up all DOM event listeners
     setupEventListeners();
 
-    // Check and sync any offline books left in queue on startup
+    // Check and sync any offline-queued books on startup
     if (navigator.onLine) {
       syncOfflineBooks();
     }
