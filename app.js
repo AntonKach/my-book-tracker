@@ -201,20 +201,27 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // --- Barcode Scanner Logic ---
-  function startBarcodeScanner() {
+  async function startBarcodeScanner() {
     // If an instance is already running, clean it up first
     if (html5QrcodeScanner) {
-      stopBarcodeScanner();
+      await stopBarcodeScanner();
     }
 
     html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
       { 
-        fps: 15, 
+        fps: 15,
+        formatsToSupport: [
+          Html5QrcodeSupportedFormats.EAN_13,
+          Html5QrcodeSupportedFormats.EAN_8,
+          Html5QrcodeSupportedFormats.UPC_A,
+          Html5QrcodeSupportedFormats.UPC_E,
+          Html5QrcodeSupportedFormats.CODE_128
+        ],
         qrbox: (width, height) => {
-          // Responsive box suited for 1D ISBN barcodes (wide and relatively thin)
-          const boxWidth = Math.min(width * 0.85, 320);
-          const boxHeight = Math.min(height * 0.35, 120);
+          // Highly optimized wide and thin rectangle for 1D barcodes
+          const boxWidth = Math.min(width * 0.85, 300);
+          const boxHeight = Math.min(height * 0.3, 100);
           return { width: boxWidth, height: boxHeight };
         },
         aspectRatio: 1.0
@@ -225,9 +232,13 @@ document.addEventListener('DOMContentLoaded', () => {
     html5QrcodeScanner.render(onScanSuccess, onScanError);
   }
 
-  function stopBarcodeScanner() {
+  async function stopBarcodeScanner() {
     if (html5QrcodeScanner) {
-      html5QrcodeScanner.clear().catch(err => console.error('Failed to clear scanner:', err));
+      try {
+        await html5QrcodeScanner.clear();
+      } catch (err) {
+        console.error('Failed to clear scanner:', err);
+      }
       html5QrcodeScanner = null;
     }
     readerWrapper.classList.add('hidden');
@@ -238,10 +249,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function onScanSuccess(decodedText, decodedResult) {
-    console.log(`Barcode scanned: ${decodedText}`);
+    console.log("Barcode detected:", decodedText);
     
     // Stop the scanner immediately
-    stopBarcodeScanner();
+    await stopBarcodeScanner();
 
     // Show loading indicator
     showLoader('Αναζήτηση ISBN...', `Αναζήτηση στοιχείων για το barcode: ${decodedText}`);
