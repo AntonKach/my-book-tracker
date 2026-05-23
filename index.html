@@ -120,39 +120,6 @@
       <p id="key-status-msg" class="status-message"></p>
     </section>
 
-    <!-- Stats Dashboard Dashboard -->
-    <section class="dashboard-stats" aria-label="Στατιστικά Βιβλιοθήκης">
-      <div class="stat-card glass-panel animate-fade-in">
-        <div class="stat-icon-wrapper purple">
-          <span class="material-icons-round">library_books</span>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value" id="stats-total">0</span>
-          <span class="stat-label">Συνολικά Βιβλία</span>
-        </div>
-      </div>
-
-      <div class="stat-card glass-panel animate-fade-in delay-1">
-        <div class="stat-icon-wrapper green">
-          <span class="material-icons-round">task_alt</span>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value" id="stats-read">0</span>
-          <span class="stat-label">Διαβασμένα</span>
-        </div>
-      </div>
-
-      <div class="stat-card glass-panel animate-fade-in delay-2">
-        <div class="stat-icon-wrapper orange">
-          <span class="material-icons-round">category</span>
-        </div>
-        <div class="stat-info">
-          <span class="stat-value" id="stats-categories">0</span>
-          <span class="stat-label">Κατηγορίες</span>
-        </div>
-      </div>
-    </section>
-
     <!-- Main Scanner Action Panel -->
     <section class="scanner-action-section glass-panel" aria-label="Σάρωση Νέου Βιβλίου">
       <div class="scanner-hero">
@@ -184,41 +151,6 @@
         <button id="btn-stop-barcode" class="btn btn-primary" style="margin: 16px auto 0 auto; display: block; width: fit-content; border: none; cursor: pointer;">Ακύρωση Σάρωσης</button>
       </div>
     </section>
-
-    <!-- Search & Filters -->
-    <section class="library-controls glass-panel" aria-label="Αναζήτηση και Φίλτρα">
-      <div class="search-box">
-        <span class="material-icons-round">search</span>
-        <input type="text" id="search-input" placeholder="Αναζήτηση με τίτλο, συγγραφέα ή κατηγορία...">
-      </div>
-      <div class="filter-tabs">
-        <button class="filter-tab active" data-filter="all">Όλα</button>
-        <button class="filter-tab" data-filter="reading">Προς Ανάγνωση</button>
-        <button class="filter-tab" data-filter="read">Διαβασμένα</button>
-      </div>
-    </section>
-
-    <!-- Shelf Grid / List -->
-    <main class="books-shelf-section">
-      <div class="shelf-header">
-        <h2>Η Βιβλιοθήκη μου</h2>
-        <span class="shelf-subtitle" id="shelf-count-text">0 βιβλία</span>
-      </div>
-
-      <!-- Empty State -->
-      <div id="empty-state" class="empty-state glass-panel">
-        <div class="empty-icon-wrapper">
-          <span class="material-icons-round">import_contacts</span>
-        </div>
-        <h3>Η βιβλιοθήκη σας είναι άδεια</h3>
-        <p>Χρησιμοποιήστε το κουμπί «Σάρωση Εξωφύλλου» παραπάνω για να φωτογραφίσετε ένα βιβλίο και να το προσθέσετε αυτόματα στη συλλογή σας.</p>
-      </div>
-
-      <!-- Grid of Book Cards -->
-      <div id="books-grid" class="books-grid">
-        <!-- Rendered dynamically via JavaScript -->
-      </div>
-    </main>
 
     <footer class="app-footer">
       <p>&copy; 2026 My Book Tracker. Κατασκευάστηκε με Gemini 1.5 Flash AI.</p>
