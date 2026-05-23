@@ -1,4 +1,4 @@
-const CACHE_NAME = 'my-book-tracker-v1';
+const CACHE_NAME = 'my-book-tracker-v2';
 const ASSETS = [
   './',
   './index.html',
@@ -35,34 +35,39 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Intercept network requests and serve from cache if offline
+// Intercept network requests - Strict Network First, falling back to Cache
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and skip external APIs (like Gemini API calls)
-  if (event.request.method !== 'GET' || event.request.url.includes('googleapis.com')) {
+  // Only handle GET requests and skip external APIs (like Gemini, Google Books, Open Library)
+  if (event.request.method !== 'GET' || 
+      event.request.url.includes('googleapis.com') || 
+      event.request.url.includes('openlibrary.org') || 
+      event.request.url.includes('script.google.com')) {
     return;
   }
 
   event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
-      
-      return fetch(event.request).then((networkResponse) => {
+    fetch(event.request)
+      .then((networkResponse) => {
         // Cache newly requested local assets dynamically
-        if (networkResponse && networkResponse.status === 200 && networkResponse.type === 'basic') {
+        if (networkResponse && networkResponse.status === 200) {
           const responseToCache = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => {
             cache.put(event.request, responseToCache);
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Offline fallback for index.html if request fails
-        if (event.request.mode === 'navigate') {
-          return caches.match('./index.html');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        // If network request fails, fall back to the cache
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+          // Offline fallback for index.html if navigating
+          if (event.request.mode === 'navigate') {
+            return caches.match('./index.html');
+          }
+        });
+      })
   );
 });

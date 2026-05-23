@@ -245,40 +245,95 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show loading indicator
     showLoader('Αναζήτηση ISBN...', `Αναζήτηση στοιχείων για το barcode: ${decodedText}`);
 
+    let title = '';
+    let authors = '';
+    let coverUrl = '';
+    let success = false;
+    let errorLog = [];
+
+    // --- 1. Attempt Google Books API ---
     try {
-      // 1. Fetch from Open Library API
-      const openLibraryUrl = `https://openlibrary.org/search.json?q=${decodedText.trim()}`;
-      const response = await fetch(openLibraryUrl);
+      console.log('[ISBN Search] Attempting Google Books API...');
+      const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${decodedText.trim()}`;
+      const response = await fetch(googleBooksUrl);
+      
       if (!response.ok) {
-        throw new Error(`Σφάλμα Open Library API: ${response.status}`);
+        throw new Error(`Google Books HTTP Error: ${response.status}`);
       }
-      
+
       const data = await response.json();
-      if (!data.docs || data.docs.length === 0) {
-        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη βάση της Open Library.`);
+      if (!data.items || data.items.length === 0) {
+        throw new Error('Google Books returned 0 results.');
       }
 
-      const doc = data.docs[0];
-      const title = doc.title || 'Άγνωστος Τίτλος';
-      const authors = doc.author_name ? doc.author_name.join(', ') : 'Άγνωστος Συγγραφέας';
+      const volumeInfo = data.items[0].volumeInfo;
+      title = volumeInfo.title || 'Άγνωστος Τίτλος';
+      authors = volumeInfo.authors ? volumeInfo.authors.join(', ') : 'Άγνωστος Συγγραφέας';
       
-      let coverUrl = '';
-      if (doc.cover_i) {
-        coverUrl = `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
+      let rawCover = volumeInfo.imageLinks?.thumbnail || volumeInfo.imageLinks?.smallThumbnail || '';
+      if (rawCover && rawCover.startsWith('http://')) {
+        coverUrl = rawCover.replace('http://', 'https://');
+      } else {
+        coverUrl = rawCover;
+      }
+      
+      success = true;
+      console.log('[ISBN Search] Successfully fetched from Google Books:', title);
+    } catch (googleErr) {
+      console.warn('[ISBN Search] Google Books API failed or rate-limited:', googleErr.message);
+      errorLog.push(`Google Books: ${googleErr.message}`);
+    }
+
+    // --- 2. Fallback to Open Library API ---
+    if (!success) {
+      try {
+        console.log('[ISBN Search] Falling back to Open Library API...');
+        const openLibraryUrl = `https://openlibrary.org/search.json?q=${decodedText.trim()}`;
+        const response = await fetch(openLibraryUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Open Library HTTP Error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        if (!data.docs || data.docs.length === 0) {
+          throw new Error('Open Library returned 0 results.');
+        }
+
+        const doc = data.docs[0];
+        title = doc.title || 'Άγνωστος Τίτλος';
+        authors = doc.author_name ? doc.author_name.join(', ') : 'Άγνωστος Συγγραφέας';
+        
+        if (doc.cover_i) {
+          coverUrl = `https://covers.openlibrary.org/b/id/${doc.cover_i}-M.jpg`;
+        }
+        
+        success = true;
+        console.log('[ISBN Search] Successfully fetched from Open Library:', title);
+      } catch (openLibraryErr) {
+        console.error('[ISBN Search] Open Library API also failed:', openLibraryErr.message);
+        errorLog.push(`Open Library: ${openLibraryErr.message}`);
+      }
+    }
+
+    // --- 3. Process Result or Handle Failure ---
+    try {
+      if (!success) {
+        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη Google Books ή την Open Library.\nΣφάλματα: ${errorLog.join(', ')}`);
       }
 
-      // 2. Call Gemini API to get Greek summary and category
+      // Call Gemini API to get Greek summary and category
       showLoader('Ανάλυση AI...', 'Το Gemini AI δημιουργεί τη σύνοψη στα Ελληνικά');
       const geminiData = await fetchBookDetailsFromGeminiText(title, authors);
 
-      // 3. Construct new book object
+      // Construct new book object
       const newBook = {
         id: 'book_' + Date.now(),
         title: geminiData.title || title,
         author: geminiData.author || authors,
         category: geminiData.category || 'Γενικό',
         summary: geminiData.summary || 'Δεν βρέθηκε σύνοψη.',
-        coverThumbnail: coverUrl, // Using Open Library Cover URL
+        coverThumbnail: coverUrl,
         isRead: false,
         addedAt: new Date().toLocaleDateString('el-GR', { day: 'numeric', month: 'long', year: 'numeric' })
       };
