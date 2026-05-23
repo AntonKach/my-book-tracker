@@ -210,20 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
     html5QrcodeScanner = new Html5QrcodeScanner(
       "reader",
       { 
-        fps: 15,
-        formatsToSupport: [
-          Html5QrcodeSupportedFormats.EAN_13,
-          Html5QrcodeSupportedFormats.EAN_8,
-          Html5QrcodeSupportedFormats.UPC_A,
-          Html5QrcodeSupportedFormats.UPC_E,
-          Html5QrcodeSupportedFormats.CODE_128
-        ],
-        qrbox: (width, height) => {
-          // Highly optimized wide and thin rectangle for 1D barcodes
-          const boxWidth = Math.min(width * 0.85, 300);
-          const boxHeight = Math.min(height * 0.3, 100);
-          return { width: boxWidth, height: boxHeight };
-        },
+        fps: 10,
+        qrbox: { width: 250, height: 150 },
         aspectRatio: 1.0
       },
       /* verbose= */ false
