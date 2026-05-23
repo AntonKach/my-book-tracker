@@ -2,7 +2,7 @@
    MY BOOK TRACKER - MAIN ES6 CONTROLLER (MODULE)
    ========================================================================== */
 
-import { loadBooks, saveBooks, loadCredentials, saveCredentials } from './js/storage.js';
+import { loadBooks, saveBooks, loadCredentials, saveCredentials, getOfflineQueue, addToOfflineQueue, clearOfflineQueue } from './js/storage.js';
 import { fetchBookDetailsFromGemini, fetchBookDetailsFromGeminiText, resolveISBN, syncBookToGoogleScript } from './js/api.js';
 import { processAndCompressImage, startBarcodeScanner, stopBarcodeScanner } from './js/scanner.js';
 
@@ -73,6 +73,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     renderLibrary();
     setupEventListeners();
+
+    // Check and sync any offline books left in queue on startup
+    if (navigator.onLine) {
+      syncOfflineBooks();
+    }
   }
 
   // --- Event Listeners Setup ---
@@ -144,6 +149,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderLibrary();
       });
     });
+
+    window.addEventListener('online', syncOfflineBooks);
   }
 
   // --- Camera Scan Handling ---
@@ -353,8 +360,35 @@ document.addEventListener('DOMContentLoaded', () => {
     renderLibrary();
 
     if (dbScriptUrl) {
-      await syncBookToGoogleScript(bookData, dbScriptUrl);
+      if (navigator.onLine) {
+        await syncBookToGoogleScript(bookData, dbScriptUrl);
+      } else {
+        addToOfflineQueue(bookData);
+        alert(`Η εφαρμογή είναι εκτός σύνδεσης! Το βιβλίο «${bookData.title}» αποθηκεύτηκε τοπικά και θα συγχρονιστεί αυτόματα μόλις επανέλθει το διαδίκτυο.`);
+      }
     }
+  }
+
+  async function syncOfflineBooks() {
+    if (!navigator.onLine) return;
+    
+    const offlineBooks = getOfflineQueue();
+    if (offlineBooks.length === 0) return;
+
+    console.log(`[Offline Sync] Internet connection restored! Syncing ${offlineBooks.length} books...`);
+    showStatusMessage(keyStatusMsg, `Σύνδεση αποκαταστάθηκε! Συγχρονισμός ${offlineBooks.length} βιβλίων...`, 'success');
+
+    const syncPromises = offlineBooks.map(book => syncBookToGoogleScript(book, dbScriptUrl));
+    await Promise.all(syncPromises);
+
+    clearOfflineQueue();
+    console.log('[Offline Sync] All offline books have been synced successfully.');
+    showStatusMessage(keyStatusMsg, 'Ολοκληρώθηκε ο συγχρονισμός των εκτός σύνδεσης βιβλίων!', 'success');
+    
+    setTimeout(() => {
+      keyStatusMsg.textContent = '';
+      keyStatusMsg.className = 'status-message';
+    }, 3000);
   }
 
   // --- Stats Dashboard Computations ---
