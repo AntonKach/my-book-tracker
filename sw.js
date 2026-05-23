@@ -37,10 +37,11 @@ self.addEventListener('activate', (event) => {
 
 // Intercept network requests - Strict Network First, falling back to Cache
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and skip external APIs (like Gemini, Google Books, Open Library)
+  // Only handle GET requests and skip external APIs (like Gemini, Google Books, Open Library, CORS proxies)
   if (event.request.method !== 'GET' || 
       event.request.url.includes('googleapis.com') || 
       event.request.url.includes('openlibrary.org') || 
+      event.request.url.includes('corsproxy.io') || 
       event.request.url.includes('script.google.com')) {
     return;
   }

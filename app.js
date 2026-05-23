@@ -251,7 +251,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let success = false;
     let errorLog = [];
 
-    // --- 1. Attempt Google Books API ---
+    // --- Step 1: Attempt Google Books API ---
     try {
       console.log('[ISBN Search] Attempting Google Books API...');
       const googleBooksUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${decodedText.trim()}`;
@@ -284,7 +284,66 @@ document.addEventListener('DOMContentLoaded', () => {
       errorLog.push(`Google Books: ${googleErr.message}`);
     }
 
-    // --- 2. Fallback to Open Library API ---
+    // --- Step 2: Scrape isbnsearch.org via CORS proxy ---
+    if (!success) {
+      try {
+        console.log('[ISBN Search] Falling back to scraping isbnsearch.org via CORS proxy...');
+        const scrapeUrl = `https://corsproxy.io/?` + encodeURIComponent(`https://isbnsearch.org/isbn/${decodedText.trim()}`);
+        const response = await fetch(scrapeUrl);
+        
+        if (!response.ok) {
+          throw new Error(`Scrape HTTP Error: ${response.status}`);
+        }
+
+        const htmlText = await response.text();
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(htmlText, 'text/html');
+
+        const h1 = doc.querySelector('h1');
+        const scrapedTitle = h1 ? h1.textContent.trim() : '';
+
+        let scrapedAuthor = '';
+        const strongs = doc.querySelectorAll('strong');
+        for (const strong of strongs) {
+          if (strong.textContent.trim().toLowerCase().includes('author')) {
+            const parentParagraph = strong.parentElement;
+            if (parentParagraph) {
+              scrapedAuthor = parentParagraph.textContent.replace(strong.textContent, '').trim();
+              break;
+            }
+          }
+        }
+
+        // Validate scraped data
+        if (!scrapedTitle || !scrapedAuthor || scrapedTitle.toLowerCase().includes('not found') || scrapedTitle.toLowerCase().includes('no results')) {
+          throw new Error('Could not parse valid book Title or Author from isbnsearch.org.');
+        }
+
+        title = scrapedTitle;
+        authors = scrapedAuthor;
+
+        // Try to scrape cover image
+        const img = doc.querySelector('.image img') || doc.querySelector('img');
+        let rawCover = img ? img.getAttribute('src') : '';
+        if (rawCover) {
+          if (rawCover.startsWith('http://')) {
+            coverUrl = rawCover.replace('http://', 'https://');
+          } else if (rawCover.startsWith('//')) {
+            coverUrl = 'https:' + rawCover;
+          } else {
+            coverUrl = rawCover;
+          }
+        }
+
+        success = true;
+        console.log('[ISBN Search] Successfully scraped from isbnsearch.org:', title);
+      } catch (scrapeErr) {
+        console.warn('[ISBN Search] Scraping isbnsearch.org failed:', scrapeErr.message);
+        errorLog.push(`ISBN Search Scraper: ${scrapeErr.message}`);
+      }
+    }
+
+    // --- Step 3: Fallback to Open Library API ---
     if (!success) {
       try {
         console.log('[ISBN Search] Falling back to Open Library API...');
@@ -316,10 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // --- 3. Process Result or Handle Failure ---
+    // --- 4. Process Result or Handle Failure ---
     try {
       if (!success) {
-        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη Google Books ή την Open Library.\nΣφάλματα: ${errorLog.join(', ')}`);
+        throw new Error(`Το βιβλίο με ISBN ${decodedText} δεν βρέθηκε στη Google Books, την IsbnSearch ή την Open Library.\nΣφάλματα: ${errorLog.join(', ')}`);
       }
 
       // Call Gemini API to get Greek summary and category
