@@ -1,0 +1,39 @@
+name: Validate
+
+on:
+  push:
+    branches:
+      - main
+      - security/**
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  static-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check app.js
+          node --check js/api.js
+          node --check js/scanner.js
+          node --check js/storage.js
+          node --check sw.js
+
+      - name: Reject committed deployment credentials
+        shell: bash
+        run: |
+          if grep -RInE --exclude-dir=.git --exclude='*.md' 'AIza[[:alnum:]_-]{20,}|script\.google\.com/macros/s/[[:alnum:]_-]{20,}/exec' .; then
+            echo "Potential credential or deployment URL found in tracked files."
+            exit 1
+          fi
