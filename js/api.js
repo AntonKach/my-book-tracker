@@ -133,21 +133,40 @@ export function fallbackRegexParse(text) {
 }
 
 export async function syncBookToGoogleScript(bookData, dbScriptUrl) {
-  if (dbScriptUrl && dbScriptUrl.trim() !== '' && dbScriptUrl.startsWith('https://script.google.com')) {
-    console.log('[Database Sync] Sending book to Google Script:', bookData.title);
-    try {
-      await fetch(dbScriptUrl, {
-        method: 'POST',
-        mode: 'no-cors',
-        headers: {
-          "Content-Type": "text/plain;charset=utf-8"
-        },
-        body: JSON.stringify(bookData)
-      });
-      console.log('[Database Sync] Successfully synced book (opaque response):', bookData.title);
-    } catch (error) {
-      console.error('[Database Sync] Failed to sync book:', bookData.title, error);
-    }
+  let endpoint;
+  try {
+    endpoint = new URL(dbScriptUrl);
+  } catch {
+    throw new Error('Το Google Script URL δεν είναι έγκυρο.');
+  }
+
+  const isGoogleWebApp =
+    endpoint.protocol === 'https:' &&
+    endpoint.hostname === 'script.google.com' &&
+    /^\/macros\/s\/[A-Za-z0-9_-]+\/exec$/.test(endpoint.pathname);
+
+  if (!isGoogleWebApp) {
+    throw new Error('Το URL πρέπει να είναι έγκυρο Google Apps Script Web App.');
+  }
+
+  console.log('[Database Sync] Sending book to Google Script:', bookData.title);
+
+  try {
+    // Apps Script web apps commonly require no-cors from a static client.
+    // A resolved opaque response confirms dispatch, but cannot expose server status.
+    await fetch(endpoint.toString(), {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'text/plain;charset=utf-8'
+      },
+      body: JSON.stringify(bookData)
+    });
+
+    return { dispatched: true, verified: false };
+  } catch (error) {
+    console.error('[Database Sync] Failed to dispatch book:', bookData.title, error);
+    throw new Error('Η αποστολή στη βάση απέτυχε. Το βιβλίο θα παραμείνει στην ουρά συγχρονισμού.');
   }
 }
 

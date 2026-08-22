@@ -1,9 +1,12 @@
-const CACHE_NAME = 'my-book-tracker-v2';
+const CACHE_NAME = 'my-book-tracker-v3';
 const ASSETS = [
   './',
   './index.html',
   './index.css',
   './app.js',
+  './js/api.js',
+  './js/scanner.js',
+  './js/storage.js',
   './manifest.json',
   './icons/icon-192.png',
   './icons/icon-512.png'
@@ -37,12 +40,9 @@ self.addEventListener('activate', (event) => {
 
 // Intercept network requests - Strict Network First, falling back to Cache
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests and skip external APIs (like Gemini, Google Books, Open Library, CORS proxies)
-  if (event.request.method !== 'GET' || 
-      event.request.url.includes('googleapis.com') || 
-      event.request.url.includes('openlibrary.org') || 
-      event.request.url.includes('corsproxy.io') || 
-      event.request.url.includes('script.google.com')) {
+  // Only cache same-origin GET requests. API calls and third-party assets bypass the worker.
+  const requestUrl = new URL(event.request.url);
+  if (event.request.method !== 'GET' || requestUrl.origin !== self.location.origin) {
     return;
   }
 

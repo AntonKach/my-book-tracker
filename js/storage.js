@@ -23,6 +23,11 @@ export function addToOfflineQueue(book) {
   localStorage.setItem('my_book_tracker_offline_queue', JSON.stringify(queue));
 }
 
+export function removeFromOfflineQueue(bookId) {
+  const remaining = getOfflineQueue().filter((book) => book.id !== bookId);
+  localStorage.setItem('my_book_tracker_offline_queue', JSON.stringify(remaining));
+}
+
 export function clearOfflineQueue() {
   localStorage.removeItem('my_book_tracker_offline_queue');
 }
