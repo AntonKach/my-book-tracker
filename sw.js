@@ -1,4 +1,4 @@
-const CACHE_NAME = 'my-book-tracker-v4';
+const CACHE_NAME = 'my-book-tracker-v5';
 const ASSETS = ['./','./index.html','./index.css','./app.js','./js/api.js','./js/scanner.js','./js/domain.js','./js/library-store.js','./js/cloud.js','./js/import-export.js','./js/ui.js','./vendor/html5-qrcode.min.js','./manifest.json','./icons/icon-192.png','./icons/icon-512.png'];
 const allowed = new Set(ASSETS.map(path=>new URL(path,self.location.href).href));
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE_NAME).then(cache=>cache.addAll(ASSETS)).then(()=>self.skipWaiting())));

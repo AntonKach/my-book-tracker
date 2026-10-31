@@ -10,7 +10,11 @@ const $=id=>document.getElementById(id);
 const local=new LocalRepository();let store=local,cloud=null,cloudAccount=null,view='library',offset=0,draft=null,editing=false,duplicate=null,importData=null,syncPromise=null,conflict=null,renderToken=0,scanBusy=false;
 const pageSize=24;
 const readJSON=(key,fallback={})=>{try{return JSON.parse(localStorage.getItem(key))??fallback}catch{return fallback}};
-const config=readJSON('booktracker.cloud.config');
+// This publishable key is safe for browsers; access to books still requires a user session and RLS.
+const config=readJSON('booktracker.cloud.config',{
+ url:'https://vhirgklggyhlvppatwes.supabase.co',
+ key:'sb_publishable_yeh5tT68bls-iCKuQGc6ng_vUeu4R5O'
+});
 const goalKey=()=>`booktracker.goals.${store.namespace}`;
 const goals=()=>readJSON(goalKey());
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('toast').classList.add('hidden'),5500);}
