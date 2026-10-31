@@ -31,11 +31,11 @@ export class CloudClient {
     this.refreshPromise = null;
   }
 
-  async #request(path, { method = 'GET', body, auth = true, headers = {} } = {}) {
+  async #request(path, { method = 'GET', body, auth = true, headers = {}, timeout = 15000 } = {}) {
     if (auth) await this.#ensureSession();
     const response = await this.fetchImpl(this.url + path, {
       method,
-      signal: AbortSignal.timeout(15000),
+      signal: AbortSignal.timeout(timeout),
       headers: {
         apikey: this.key,
         ...(auth ? { Authorization: `Bearer ${this.session.access_token}` } : {}),
@@ -114,6 +114,12 @@ export class CloudClient {
 
   async #rpc(name, body) {
     return this.#request(`/rest/v1/rpc/${name}`, { method: 'POST', body });
+  }
+
+  async recognizeCover(image) {
+    const data = await this.#request('/functions/v1/recognize-cover', { method: 'POST', body: { image }, timeout: 35000 });
+    if (!data || typeof data.title !== 'string' || !data.title.trim()) throw new Error('Δεν αναγνωρίστηκε τίτλος. Δοκίμασε καθαρότερη φωτογραφία.');
+    return data;
   }
 
   async search({ query = '', category = '', status = '', ownership = '', offset = 0, limit = 24, archived = false } = {}) {

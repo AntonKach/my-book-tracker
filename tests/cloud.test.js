@@ -140,3 +140,24 @@ test('native browser fetch receives the global receiver',async()=>{
  const cloud=client(async function(url){assert.equal(this,globalThis);return response(auth);});
  await cloud.signIn('test@example.com','password');
 });
+
+test('cover recognition refreshes the saved login and sends no browser Gemini credential',async()=>{
+ const seen=[],store=storage();
+ const fetchImpl=async(url,options)=>{seen.push({url,options});
+  if(url.includes('grant_type=password'))return response({...auth,expires_in:1});
+  if(url.includes('grant_type=refresh_token'))return response({...auth,access_token:'fresh-token'});
+  return response({title:'Cover title',author:'Author',summary:''});
+ };
+ const first=client(fetchImpl,store);await first.signIn('a@b.co','password');
+ const restarted=client(fetchImpl,store);await restarted.restoreSession();
+ const result=await restarted.recognizeCover('data:image/jpeg;base64,/9j/2Q==');
+ assert.equal(result.title,'Cover title');const last=seen.at(-1);
+ assert.equal(last.url,URL+'/functions/v1/recognize-cover');assert.equal(last.options.headers.Authorization,'Bearer fresh-token');
+ assert.deepEqual(JSON.parse(last.options.body),{image:'data:image/jpeg;base64,/9j/2Q=='});
+ assert.equal(seen.some(c=>c.url.includes('googleapis.com')),false);
+});
+test('cover recognition rejects a signed-out client and propagates a safe endpoint error',async()=>{
+ const cloud=client(async url=>url.includes('/token?')?response(auth):response({message:'Χρειάζεται σύνδεση.'},401));
+ await assert.rejects(cloud.recognizeCover('image'),/sign-in/);
+ await cloud.signIn('a@b.co','password');await assert.rejects(cloud.recognizeCover('image'),/Χρειάζεται σύνδεση/);
+});

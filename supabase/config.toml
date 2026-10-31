@@ -1,0 +1,3 @@
+[functions.recognize-cover]
+verify_jwt = true
+entrypoint = "./functions/recognize-cover/index.js"
