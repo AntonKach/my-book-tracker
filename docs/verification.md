@@ -14,3 +14,11 @@
 - Offline cloud mode is an on-demand cache of books already read on the device, not a full mirror. Complete collection browsing without network is available for the local library.
 - Browser memory and service/storage quotas remain practical capacity limits. No artificial book-count cap is used.
 - Real camera hardware and Gemini service calls were not exercised. Manual entry, import and ISBN adapter behavior were tested.
+
+## Private cover recognition — 2026-10-31
+
+- 48 unit/database/endpoint tests, 11 Chromium workflows and 4 WebKit scanner workflows pass.
+- A new browser context with saved Supabase login and empty sessionStorage recognizes a test cover without a browser Gemini key; expired access tokens refresh before the call.
+- Deployed `recognize-cover` with JWT verification enabled. An actual signed-in owner request recognized THE TEST BOOK / Alex Example. An anonymous-key request returned 401. No test book was saved.
+- Tests cover wrong owner, anonymous Auth user, malformed/oversized body, CORS, provider rate limit/errors and no secret in responses.
+- Real iPhone camera hardware has not been exercised; WebKit coverage includes mobile layout and file selection.

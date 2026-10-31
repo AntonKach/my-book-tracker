@@ -17,13 +17,3 @@ export async function resolveISBN(value) {
  }catch{ /* Manual entry always remains available. */ }
  throw new Error('Δεν βρέθηκε επιβεβαιωμένη έκδοση. Μπορείτε να καταχωρίσετε το βιβλίο χειροκίνητα.');
 }
-export async function fetchBookDetailsFromGemini(base64DataUrl,apiKey){
- if(!apiKey)throw new Error('Προσθέστε προσωπικό κλειδί Gemini στις ρυθμίσεις για αναγνώριση εξωφύλλου.');
- const categories=['Λογοτεχνία','Φιλοσοφία','Ιστορία','Επιστήμη','Μουσική','Τέχνη','Δίκαιο','Πρακτικά & προσωπική ανάπτυξη','Άλλο'];
- const data=await json('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',{
-  method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},body:JSON.stringify({contents:[{parts:[{text:`Extract only visible title, author and ISBN from this book cover. Preserve original spelling. Unknown values must be empty strings. Suggest a category from ${categories.join(', ')} and optional subcategory. Do NOT invent a synopsis or bibliographic facts. Return JSON keys title, author, isbn, category, subcategory, summary (empty).`},{inlineData:{mimeType:'image/jpeg',data:base64DataUrl.split(',')[1]}}]}],generationConfig:{responseMimeType:'application/json'}})
- });
- const value=JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text||'{}');
- if(!value.title)throw new Error('Δεν αναγνωρίστηκε τίτλος. Δοκιμάστε καθαρότερη φωτογραφία ή χειροκίνητη καταχώριση.');
- return {...value,summary:'',sources:[{name:'Gemini · πρόταση από εξώφυλλο, προς έλεγχο',url:'',fetchedAt:new Date().toISOString()}]};
-}

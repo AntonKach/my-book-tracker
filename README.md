@@ -7,7 +7,7 @@ A Greek-language personal library and reading journal, deployable as a static PW
 - Keep independent reading sessions, progress, dates, notes and ratings, including rereads.
 - Search without Greek accents/case differences; paginate the collection.
 - Set yearly reading goals, see monthly statistics, and choose unread books from your own shelves.
-- Scan ISBN barcodes or optionally recognize a cover with a personal Gemini key; review metadata before saving. Manual entry and ISBN lookup require no AI key.
+- Scan ISBN barcodes or recognize a cover through your signed-in private account (the Gemini key stays on the server); review metadata before saving. Manual entry and ISBN lookup require no AI key.
 - Import Greek-header Google Sheets CSV or restore a full JSON backup. Potential duplicates are reviewed or skipped; originals are not deleted.
 - Store changes durably in IndexedDB. Optional Supabase synchronization confirms database writes and exposes conflicts for a user decision.
 
@@ -53,6 +53,6 @@ The database tests create isolated test auth roles and run the real migration in
 
 ## Privacy and dependencies
 
-Bibliographic lookups contact Google Books and Open Library. Cover recognition sends the selected compressed image to Gemini only when requested. Its personal key is session-only in the browser; use only on a trusted device. Supabase auth tokens are browser-accessible by design and isolated per project. Book pages escape user data and accept HTTPS cover images. Only static app assets are cached by the service worker.
+Bibliographic lookups contact Google Books and Open Library. Cover recognition sends the selected compressed image to Gemini only when requested. The Gemini key lives only in Supabase secrets. The recognition endpoint validates the signed-in user and restricts access to the configured owner; no Gemini credential is stored in the browser. Supabase auth tokens are browser-accessible by design and isolated per project. Book pages escape user data and accept HTTPS cover images. Only static app assets are cached by the service worker.
 
 The barcode library is pinned and vendored with its license in `vendor/`, so manual browsing and the scanner's code can load offline. Catalog lookups and AI recognition still require a network connection. No scrape proxy is used.
