@@ -1,165 +1,43 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="el">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>My Book Tracker - PWA</title>
-  
-  <!-- PWA & Mobile Optimization Meta Tags -->
-  <meta name="theme-color" content="#7c3aed">
-  <meta name="referrer" content="no-referrer">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://unpkg.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https:; connect-src 'self' https://generativelanguage.googleapis.com https://www.googleapis.com https://openlibrary.org https://corsproxy.io https://script.google.com; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; upgrade-insecure-requests">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="BookTracker">
-  <link rel="apple-touch-icon" href="icons/icon-192.png">
-  <link rel="manifest" href="manifest.json">
-  
-  <!-- Premium Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  
-  <!-- Modern Material Icons -->
-  <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-  
-  <!-- HTML5 QR Code & Barcode Scanner Library -->
-  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" type="text/javascript"></script>
-
-  <!-- Application Styles -->
-  <link rel="stylesheet" href="index.css">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#25263a"><meta name="referrer" content="no-referrer">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' https: data: blob:; connect-src 'self' https://generativelanguage.googleapis.com https://www.googleapis.com https://openlibrary.org https://*.supabase.co; media-src 'self' blob:; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+<title>BookTracker · Η βιβλιοθήκη μου</title><link rel="manifest" href="manifest.json"><link rel="icon" href="icons/icon-192.png"><link rel="apple-touch-icon" href="icons/icon-192.png"><link rel="stylesheet" href="index.css">
+<script src="vendor/html5-qrcode.min.js" defer></script><script type="module" src="app.js"></script>
 </head>
 <body>
-
-  <!-- Background Glowing Blobs -->
-  <div class="blob blob-1"></div>
-  <div class="blob blob-2"></div>
-  <div class="blob blob-3"></div>
-
-  <!-- Fullscreen Glassmorphic Loader -->
-  <div id="loading-overlay" class="loading-overlay hidden" aria-hidden="true" role="dialog" aria-labelledby="loader-title">
-    <div class="loader-content">
-      <div class="scanner-container">
-        <div class="scanner-laser"></div>
-        <div class="scanner-book-icon">
-          <span class="material-icons-round">auto_stories</span>
-        </div>
-      </div>
-      <h2 id="loader-title">Ανάλυση Εξωφύλλου...</h2>
-      <p id="loader-subtitle">Το Gemini AI επεξεργάζεται την εικόνα</p>
-      <div class="loader-dots">
-        <span></span><span></span><span></span>
-      </div>
-    </div>
-  </div>
-
-  <div class="app-container">
-    
-    <!-- Top Header -->
-    <header class="app-header">
-      <div class="header-logo">
-        <div class="logo-icon-bg">
-          <span class="material-icons-round">auto_stories</span>
-        </div>
-        <div class="logo-text">
-          <h1>My Book Tracker</h1>
-          <span class="pwa-badge">PWA</span>
-        </div>
-      </div>
-      
-      <div class="header-actions">
-        <button id="toggle-key-btn" class="icon-btn" aria-label="Ρυθμίσεις Gemini Key" title="Ρυθμίσεις Gemini Key">
-          <span class="material-icons-round">vpn_key</span>
-        </button>
-      </div>
-    </header>
-
-    <!-- Gemini Key & Database Config Banner (Collapsible) -->
-    <section id="key-config-section" class="key-config-section glass-panel hidden" aria-label="Gemini API Key & Database Configuration">
-      <div class="key-config-header">
-        <span class="material-icons-round text-accent">settings</span>
-        <h3>Ρυθμίσεις Σύνδεσης & Βάσης</h3>
-      </div>
-      
-      <!-- Gemini API Key Input Row -->
-      <div class="config-row">
-        <label for="gemini-key-input" class="config-label" style="display: block; font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">Gemini API Key</label>
-        <p class="key-description" style="margin-bottom: 8px;">
-          Εισάγετε το δικό σας <strong>Gemini API Key</strong> για να ενεργοποιήσετε την αυτόματη αναγνώριση βιβλίων.
-        </p>
-        <div class="key-input-wrapper">
-          <div class="input-icon-field" style="width: 100%;">
-            <span class="material-icons-round field-icon">lock</span>
-            <input type="password" id="gemini-key-input" placeholder="AIzaSy..." autocomplete="off">
-            <button id="toggle-visible-key-btn" class="input-action-btn" aria-label="Εμφάνιση κλειδιού">
-              <span class="material-icons-round">visibility</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Google Script URL Input Row -->
-      <div class="config-row" style="margin-top: 16px;">
-        <label for="db-script-url-input" class="config-label" style="display: block; font-family: var(--font-display); font-weight: 600; font-size: 0.9rem; margin-bottom: 4px;">Google Script URL (Optional Database)</label>
-        <p class="key-description" style="margin-bottom: 8px;">
-          Εισάγετε το URL του <strong>Google Apps Script Web App</strong> για τον συγχρονισμό των βιβλίων σας σε εξωτερική βάση.
-        </p>
-        <div class="key-input-wrapper">
-          <div class="input-icon-field" style="width: 100%;">
-            <span class="material-icons-round field-icon">cloud_queue</span>
-            <input type="password" id="db-script-url-input" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
-            <button id="toggle-visible-db-url-btn" class="input-action-btn" aria-label="Εμφάνιση URL">
-              <span class="material-icons-round">visibility</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <div class="config-actions-row" style="display: flex; justify-content: flex-end; margin-top: 16px;">
-        <button id="save-key-btn" class="btn btn-primary">Αποθήκευση Ρυθμίσεων</button>
-      </div>
-      
-      <p id="key-status-msg" class="status-message"></p>
-    </section>
-
-    <!-- Main Scanner Action Panel -->
-    <section class="scanner-action-section glass-panel" aria-label="Σάρωση Νέου Βιβλίου">
-      <div class="scanner-hero">
-        <div class="scanner-hero-art">
-          <span class="material-icons-round hero-glow-icon">photo_camera</span>
-        </div>
-        <div class="scanner-hero-text">
-          <h2>Προσθήκη με Φωτογραφία</h2>
-          <p>Βγάλε μια φωτογραφία το εξώφυλλο του βιβλίου και άφησε το Gemini AI να κάνει τα υπόλοιπα!</p>
-        </div>
-      </div>
-
-      <div class="scan-button-wrapper" style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
-        <label for="camera-input" class="btn btn-scan animate-pulse" role="button" tabindex="0">
-          <span class="material-icons-round">photo_camera</span>
-          <span>Σάρωση Εξωφύλλου</span>
-        </label>
-        <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
-
-        <button id="btn-scan-barcode" class="btn btn-scan animate-pulse" style="background: linear-gradient(135deg, var(--accent-light), var(--accent-color)); border: none; cursor: pointer; color: white;">
-          <span class="material-icons-round">qr_code_scanner</span>
-          <span>Σάρωση Barcode (ISBN)</span>
-        </button>
-      </div>
-
-      <!-- Live Barcode Camera Feed Container -->
-      <div id="reader-wrapper" class="hidden" style="width: 100%; max-width: 500px; margin: 20px auto 0 auto; border-radius: 16px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(15, 10, 25, 0.6); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); padding: 16px;">
-        <div id="reader" style="width: 100%;"></div>
-        <button id="btn-stop-barcode" class="btn btn-primary" style="margin: 16px auto 0 auto; display: block; width: fit-content; border: none; cursor: pointer;">Ακύρωση Σάρωσης</button>
-      </div>
-    </section>
-
-    <footer class="app-footer">
-      <p>&copy; 2026 My Book Tracker. Κατασκευάστηκε με Gemini 1.5 Flash AI.</p>
-    </footer>
-
-  </div>
-
-  <script type="module" src="app.js"></script>
-</body>
-</html>
+<a class="skip" href="#main">Μετάβαση στο περιεχόμενο</a>
+<aside class="sidebar"><a class="brand" href="./"><span class="brand-icon" aria-hidden="true">▤</span><span>BookTracker<small>Χώρος για κάθε ιστορία.</small></span></a>
+<nav aria-label="Κύρια πλοήγηση"><button data-view="library" class="nav active" aria-current="page"><span aria-hidden="true">▦</span> Βιβλιοθήκη</button><button data-view="reading" class="nav"><span aria-hidden="true">◉</span> Η ανάγνωσή μου</button><button data-view="stats" class="nav"><span aria-hidden="true">▥</span> Στατιστικά</button></nav>
+<div class="sidebar-bottom"><span class="eyebrow">Η ΔΙΚΗ ΣΟΥ ΣΥΛΛΟΓΗ</span><p>Βιβλία που κρατάς.<br>Ιστορίες που σε αλλάζουν.</p><button id="settings-open" class="nav"><span aria-hidden="true">⚙</span> Ρυθμίσεις</button><div id="connection-status" class="connection" role="status">Τοπική βιβλιοθήκη</div></div>
+</aside>
+<main id="main">
+<header class="page-header"><div><span class="eyebrow" id="view-eyebrow">Ο ΠΡΟΣΩΠΙΚΟΣ ΣΟΥ ΚΑΤΑΛΟΓΟΣ</span><h1 id="view-title">Η βιβλιοθήκη μου</h1><p id="view-subtitle">Κάθε βιβλίο στη θέση του.</p></div><div class="header-actions"><button id="scan-open" class="secondary">Σάρωση / ISBN</button><button id="add-book" class="primary">＋ Νέο βιβλίο</button></div></header>
+<div id="notice" class="notice hidden" role="status"></div>
+<section id="collection-view">
+<div id="reading-summary" class="reading-summary hidden"></div>
+<div class="toolbar"><label class="search-label"><span aria-hidden="true">⌕</span><input type="search" id="search" aria-label="Αναζήτηση βιβλίων" placeholder="Τίτλος, συγγραφέας, ISBN ή ετικέτα…"></label><button id="refresh" class="secondary" title="Ανανέωση συλλογής">Ανανέωση</button></div>
+<div class="filters"><label>Κατηγορία<select id="category-filter"><option value="">Όλες οι κατηγορίες</option></select></label><label>Ανάγνωση<select id="status-filter"><option value="">Όλες οι καταστάσεις</option></select></label><label>Κατοχή<select id="ownership-filter"><option value="">Όλα τα βιβλία</option></select></label><label class="checkbox"><input id="archived-filter" type="checkbox"> Αρχειοθετημένα</label></div>
+<div class="collection-meta"><span id="result-count" aria-live="polite"></span><span>Η συλλογή μεγαλώνει μαζί σου</span></div>
+<section id="pending-panel" class="hidden" aria-label="Εκκρεμείς αλλαγές"></section>
+<div id="book-grid" class="book-grid" aria-live="polite"></div>
+<div id="empty" class="empty hidden"><div class="empty-icon" aria-hidden="true">▤</div><h2>Το επόμενο κεφάλαιο αρχίζει εδώ.</h2><p>Πρόσθεσε το πρώτο σου βιβλίο ή εισήγαγε τη συλλογή σου από τις Ρυθμίσεις.</p><button id="empty-add" class="primary">Προσθήκη βιβλίου</button></div>
+<div class="pagination"><button id="previous" class="secondary">← Προηγούμενα</button><span id="page-label"></span><button id="next" class="secondary">Επόμενα →</button></div>
+<section id="recommendations" class="recommendations hidden"><div class="section-heading"><div><span class="eyebrow">ΑΠΟ ΤΑ ΔΙΚΑ ΣΟΥ ΡΑΦΙΑ</span><h2>Τι να διαβάσω μετά;</h2></div></div><p>Αδιάβαστα βιβλία που έχεις ήδη, με προτεραιότητα στη λίστα ανάγνωσης.</p><div id="recommendation-grid" class="book-grid"></div></section>
+</section>
+<section id="stats-view" class="hidden"><div class="stats-controls"><label>Έτος<select id="stats-year"></select></label><form id="goal-form"><label>Ετήσιος στόχος βιβλίων<input id="goal" type="number" min="0" step="1" max="1000000" value="12"></label><button class="primary">Αποθήκευση στόχου</button></form></div><div id="stats-content"></div></section>
+<footer class="page-footer">BookTracker · Η δική σου βιβλιοθήκη, με τον δικό σου ρυθμό.</footer>
+</main>
+<dialog id="book-dialog"><form id="book-form"><div class="dialog-header"><div><span class="eyebrow">ΣΤΟΙΧΕΙΑ & ΙΣΤΟΡΙΚΟ</span><h2 id="editor-title">Νέο βιβλίο</h2></div><button type="button" data-close="book-dialog" class="icon-button" aria-label="Κλείσιμο βιβλίου">×</button></div><div id="editor-fields"></div><div id="duplicate-panel" class="notice hidden"></div><p id="book-error" class="error" role="alert"></p><div class="dialog-actions"><button type="button" id="archive-book" class="secondary">Αρχειοθέτηση</button><button type="button" data-close="book-dialog" class="secondary">Ακύρωση</button><button type="submit" class="primary">Αποθήκευση βιβλίου</button></div></form></dialog>
+<dialog id="settings-dialog"><div class="dialog-header"><h2>Ρυθμίσεις & αντίγραφα</h2><button data-close="settings-dialog" class="icon-button" aria-label="Κλείσιμο ρυθμίσεων">×</button></div>
+<section class="settings-section"><h3>Η συλλογή σου</h3><p>Το JSON κρατά όλα τα αντίτυπα, τις αναγνώσεις και τις σημειώσεις. Το CSV εξάγει τα βασικά στοιχεία για Google Sheets.</p><div class="button-row"><button id="export-json" class="primary">Πλήρες αντίγραφο JSON</button><button id="export-csv" class="secondary">Εξαγωγή CSV</button><label class="file-button secondary">Εισαγωγή CSV / JSON<input id="import-file" type="file" accept=".csv,.json,text/csv,application/json"></label></div><p class="muted">Η τοπική συλλογή αποθηκεύεται σε αυτόν τον browser. Τα τακτικά αντίγραφα προστατεύουν από διαγραφή των δεδομένων του.</p><button id="persist-storage" class="text-button">Αίτημα διατήρησης δεδομένων στη συσκευή</button></section>
+<section class="settings-section"><h3>Σύνδεση μεταξύ συσκευών</h3><p>Προαιρετική σύνδεση με δικό σου project Supabase. Χρειάζεται πρώτα η εγκατάσταση της βάσης από τον οδηγό του έργου.</p><form id="cloud-form" class="form-grid"><label class="wide">URL project<input id="cloud-url" type="url" placeholder="https://your-project.supabase.co"></label><label class="wide">Publishable / anon key<input id="cloud-key" type="password" autocomplete="off" placeholder="sb_publishable_…"></label><label>Email<input id="cloud-email" type="email" autocomplete="username"></label><label>Κωδικός<input id="cloud-password" type="password" autocomplete="current-password"></label><div class="wide button-row"><button class="primary">Σύνδεση</button><button type="button" id="cloud-signout" class="secondary">Τοπική λειτουργία</button><button type="button" id="upload-local" class="secondary">Μεταφορά τοπικής συλλογής στο cloud</button></div></form><p id="cloud-message" role="status"></p></section>
+<section class="settings-section"><h3>Αναγνώριση εξωφύλλου</h3><p>Το ISBN και η χειροκίνητη καταχώριση λειτουργούν χωρίς AI. Για φωτογραφίες, το προσωπικό κλειδί Gemini κρατιέται μόνο για αυτή τη συνεδρία.</p><label>Προσωπικό Gemini API key<input id="gemini-key" type="password" autocomplete="off"></label><button id="save-ai-key" class="secondary">Αποθήκευση για τη συνεδρία</button></section>
+</dialog>
+<dialog id="scan-dialog"><div class="dialog-header"><h2>Προσθήκη από ISBN ή εξώφυλλο</h2><button data-close="scan-dialog" class="icon-button" aria-label="Κλείσιμο σάρωσης">×</button></div><form id="isbn-form" class="button-row"><label class="grow">ISBN<input id="isbn-input" placeholder="978…" inputmode="numeric" required></label><button class="primary">Αναζήτηση ISBN</button></form><div class="button-row"><button id="barcode-start" class="secondary">Κάμερα barcode</button><label class="file-button secondary">Φωτογραφία εξωφύλλου<input id="camera-input" type="file" accept="image/*" capture="environment"></label></div><div id="reader-wrapper" class="hidden"><div id="reader"></div><button id="barcode-stop" class="secondary">Διακοπή κάμερας</button></div><p id="scan-message" role="status">Τα στοιχεία θα εμφανιστούν για έλεγχο πριν από την αποθήκευση.</p></dialog>
+<dialog id="import-dialog"><div class="dialog-header"><h2>Έλεγχος εισαγωγής</h2><button data-close="import-dialog" class="icon-button" aria-label="Κλείσιμο εισαγωγής">×</button></div><div id="import-preview"></div><label class="checkbox"><input id="import-duplicates" type="checkbox"> Κράτησε και πιθανά διπλότυπα ως ξεχωριστές εγγραφές</label><p id="import-message" role="status"></p><div class="dialog-actions"><button data-close="import-dialog" class="secondary">Ακύρωση</button><button id="import-confirm" class="primary">Εισαγωγή έγκυρων εγγραφών</button></div></dialog>
+<dialog id="conflict-dialog"><div class="dialog-header"><h2>Υπάρχει αλλαγή από άλλη συσκευή</h2></div><p id="conflict-text"></p><p>Η δική σου αλλαγή παραμένει αποθηκευμένη εδώ. Διάλεξε ποια έκδοση θέλεις να κρατήσεις.</p><div class="button-row"><button id="conflict-local" class="primary">Κράτησε τη δική μου αλλαγή</button><button id="conflict-remote" class="secondary">Χρήση έκδοσης cloud</button><button data-close="conflict-dialog" class="secondary">Αργότερα</button></div></dialog>
+<div id="toast" role="status" class="toast hidden"></div>
+</body></html>

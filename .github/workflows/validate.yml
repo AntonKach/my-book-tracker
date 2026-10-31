@@ -1,39 +1,25 @@
 name: Validate
-
-on:
-  push:
-    branches:
-      - main
-      - security/**
-  pull_request:
-
+on: [push, pull_request]
 permissions:
   contents: read
-
 jobs:
-  static-checks:
+  validate:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
-
-      - name: Check JavaScript syntax
-        run: |
-          node --check app.js
-          node --check js/api.js
-          node --check js/scanner.js
-          node --check js/storage.js
-          node --check sw.js
-
+          cache: npm
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
       - name: Reject committed deployment credentials
         shell: bash
         run: |
-          if grep -RInE --exclude-dir=.git --exclude='*.md' 'AIza[[:alnum:]_-]{20,}|script\.google\.com/macros/s/[[:alnum:]_-]{20,}/exec' .; then
-            echo "Potential credential or deployment URL found in tracked files."
+          if git grep -nE 'AIza[[:alnum:]_-]{20,}|script\.google\.com/macros/s/[[:alnum:]_-]{20,}/exec' -- ':!*.md'; then
+            echo 'Potential credential or deployment URL in tracked files.'
             exit 1
           fi
