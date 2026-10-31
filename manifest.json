@@ -1,11 +1,11 @@
 {
   "name": "My Book Tracker",
   "short_name": "BookTracker",
-  "description": "Scan and track your books with Gemini AI cover recognition.",
+  "description": "Προσωπική βιβλιοθήκη, δανεισμοί και ημερολόγιο ανάγνωσης.",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#09090b",
-  "theme_color": "#7c3aed",
+  "background_color": "#f7f6f2",
+  "theme_color": "#25263a",
   "orientation": "portrait-primary",
   "icons": [
     {
